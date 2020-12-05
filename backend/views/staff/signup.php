@@ -19,11 +19,11 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="col-lg-5">
             <?php $form = ActiveForm::begin(['id' => 'form-signup']); ?>
 
-            <?= $form->field($model, 'staff_id')->textInput(['maxlength' => true]) ?>
+            <?= $form->field($model, 'staff_id')->textInput(['maxlength' => true, 'autofocus' => true]) ?>
 
             <?= $form->field($model, 'fullname')->textInput(['maxlength' => true]) ?>
 
-            <?= $form->field($model, 'username')->textInput(['autofocus' => true]) ?>
+            <?= $form->field($model, 'username')->textInput(['maxlength' => true]) ?>
 
             <?= $form->field($model, 'password')->passwordInput() ?>
 

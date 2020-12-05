@@ -91,8 +91,9 @@ class StaffController extends Controller
     {
         $model = new SignupForm();
         if ($model->load(Yii::$app->request->post()) && $model->signup()) {
-            Yii::$app->session->setFlash('success', 'Thank you for registration. Please check your inbox for verification email.');
-            return $this->goHome();
+            Yii::$app->session->setFlash('success', 'New account is created');
+            //return $this->goHome();
+            return $this->redirect(['index']);
         }
 
         return $this->render('signup', [

@@ -46,6 +46,24 @@ AppAsset::register($this);
                 ['label' => 'Category', 'url' => ['/category/index']],
                 ['label' => 'Posts', 'url' => ['/posts/index']],
             ];
+            if (Yii::$app->user->can('admin')) {
+                $menuItems[] = [
+                    'label' => 'Administration',
+                    'items' => [
+                        ['label' => 'Assignment', 'url' => ['/admin/assignment']],
+                        '<li class="divider"></li>',
+                        ['label' => 'Menu', 'url' => ['/admin/menu']],
+                        '<li class="divider"></li>',
+                        ['label' => 'Permission', 'url' => ['/admin/permission']],
+                        '<li class="divider"></li>',
+                        ['label' => 'Role', 'url' => ['/admin/role']],
+                        '<li class="divider"></li>',
+                        ['label' => 'Route', 'url' => ['/admin/route']],
+                        '<li class="divider"></li>',
+                        ['label' => 'Rule', 'url' => ['/admin/rule']],
+                    ]
+                ];
+            }
             $menuItems[] = '<li>'
                 . Html::beginForm(['/admin/user/logout'], 'post')
                 . Html::submitButton(
