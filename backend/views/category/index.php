@@ -4,6 +4,8 @@ use yii\helpers\Html;
 use kartik\grid\GridView;
 use yii\bootstrap\Modal;
 use yii\helpers\Url;
+use yii\helpers\ArrayHelper;
+use backend\models\Staff;
 
 /* @var $this yii\web\View */
 /* @var $searchModel backend\models\CategorySearch */
@@ -43,7 +45,8 @@ $this->params['breadcrumbs'][] = $this->title;
             'description',
             [
                 'attribute' => 'created_by',
-                'value' => 'user.username',
+                'value' => 'staff.username',
+                'filter'=>ArrayHelper::map(Staff::find()->asArray()->orderBy("username ASC")->all(), 'id','username'),
             ],
             [
                 'attribute' => 'status',

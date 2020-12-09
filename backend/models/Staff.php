@@ -213,4 +213,15 @@ class Staff extends \yii\db\ActiveRecord implements IdentityInterface
     {
         $this->password_reset_token = null;
     }
+
+    
+    public function getPosts()
+    {
+        return $this->hasMany(Posts::className(), ['author' => 'id']);
+    }
+    
+    public function getCategory()
+    {
+        return $this->hasMany(Category::className(), ['created_by' => 'id']);
+    }
 }

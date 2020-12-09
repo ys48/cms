@@ -3,7 +3,6 @@
 namespace backend\models;
 
 use Yii;
-use common\models\User;
 
 /**
  * This is the model class for table "posts".
@@ -73,8 +72,8 @@ class Posts extends \yii\db\ActiveRecord
         return $this->hasOne(Category::className(), ['id' => 'category_id']);
     }
 
-    public function getUser()
+    public function getStaff()
     {
-        return $this->hasOne(User::className(), ['id' => 'author']);
+        return $this->hasOne(Staff::className(), ['id' => 'author']);
     }
 }

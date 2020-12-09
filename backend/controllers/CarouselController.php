@@ -3,19 +3,19 @@
 namespace backend\controllers;
 
 use Yii;
-use backend\models\Category;
-use backend\models\CategorySearch;
+use backend\models\Carousel;
+use backend\models\CarouselSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\UploadedFile;
 use yii\filters\AccessControl;
-use yii\base\Model;
 use yii\web\ForbiddenHttpException;
 
 /**
- * CategoryController implements the CRUD actions for Category model.
+ * CarouselController implements the CRUD actions for Carousel model.
  */
-class CategoryController extends Controller
+class CarouselController extends Controller
 {
     /**
      * {@inheritdoc}
@@ -27,7 +27,7 @@ class CategoryController extends Controller
                 'class' => AccessControl::className(),
                 'rules' => [
                     [
-                        'actions' => ['index', 'view', 'create', 'update', 'delete', 'status'],
+                        'actions' => ['index', 'view', 'create', 'update', 'delete'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -43,29 +43,33 @@ class CategoryController extends Controller
     }
 
     /**
-     * Lists all Category models.
+     * Lists all Carousel models.
      * @return mixed
      */
     public function actionIndex()
     {
-        $searchModel = new CategorySearch();
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+        if (\Yii::$app->user->can('admin')) {
+            $searchModel = new CarouselSearch();
+            $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+            return $this->render('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        } else {
+            throw new ForbiddenHttpException('You are not allowed to perform this action.');
+        }
     }
 
     /**
-     * Displays a single Category model.
+     * Displays a single Carousel model.
      * @param integer $id
      * @return mixed
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
-        if (\Yii::$app->user->can('articles-view-categories')) {
+        if (\Yii::$app->user->can('admin')) {
             return $this->render('view', [
                 'model' => $this->findModel($id),
             ]);
@@ -75,18 +79,32 @@ class CategoryController extends Controller
     }
 
     /**
-     * Creates a new Category model.
+     * Creates a new Carousel model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
     public function actionCreate()
     {
-        if (\Yii::$app->user->can('articles-create-categories')) {
-            $model = new Category();
-            $model->created_by = Yii::$app->user->identity->id;
+        if (\Yii::$app->user->can('admin')) {
+            $model = new Carousel();
 
-            if ($model->load(Yii::$app->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+            if ($model->load(Yii::$app->request->post())) {
+                $counter = 0;
+                $model->files = UploadedFile::getInstances($model, 'files');
+                foreach ($model->files as $file) {
+                    $counter++;
+                    $model1 = new Carousel();
+                    $model1->image = 'carousel_' . Yii::$app->security->generateRandomString() . '_' . $file->baseName . '.' . $file->extension;
+                    $model1->status = $model->status;
+                    if ($model1->save()) {
+                        $file->saveAs(Yii::getAlias('@imgPath') . '/' . $model1->image);
+                    }
+                }
+                if ($counter > 1) {
+                    return $this->redirect(['index']);
+                } else {
+                    return $this->redirect(['view', 'id' => $model1->id]);
+                }
             }
 
             return $this->render('create', [
@@ -98,7 +116,7 @@ class CategoryController extends Controller
     }
 
     /**
-     * Updates an existing Category model.
+     * Updates an existing Carousel model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param integer $id
      * @return mixed
@@ -106,7 +124,7 @@ class CategoryController extends Controller
      */
     public function actionUpdate($id)
     {
-        if (\Yii::$app->user->can('articles-update-categories')) {
+        if (\Yii::$app->user->can('admin')) {
             $model = $this->findModel($id);
 
             if ($model->load(Yii::$app->request->post()) && $model->save()) {
@@ -122,7 +140,7 @@ class CategoryController extends Controller
     }
 
     /**
-     * Deletes an existing Category model.
+     * Deletes an existing Carousel model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param integer $id
      * @return mixed
@@ -130,7 +148,18 @@ class CategoryController extends Controller
      */
     public function actionDelete($id)
     {
-        if (\Yii::$app->user->can('articles-delete-categories')) {
+        if (\Yii::$app->user->can('admin')) {
+            $image = Carousel::find()
+                ->where(['id' => $id])
+                ->one()
+                ->image;
+
+            if ($image) {
+                if (!unlink(Yii::getAlias('@imgPath') . '/' . $image)) {
+                    return false;
+                }
+            }
+
             $this->findModel($id)->delete();
 
             return $this->redirect(['index']);
@@ -140,43 +169,18 @@ class CategoryController extends Controller
     }
 
     /**
-     * Finds the Category model based on its primary key value.
+     * Finds the Carousel model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
-     * @return Category the loaded model
+     * @return Carousel the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Category::findOne($id)) !== null) {
+        if (($model = Carousel::findOne($id)) !== null) {
             return $model;
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
-    }
-
-    public function actionStatus()
-    {
-        if (\Yii::$app->user->can('articles-publish-categories')) {
-            $model = Category::find()->indexBy('id')->all();
-
-            if (Model::loadMultiple($model, Yii::$app->request->post()) && Model::validateMultiple($model)) {
-                foreach ($model as $models) {
-                    $models->save(false);
-                }
-                $this->redirect('index');
-            }
-            return $this->renderAjax('_status', [
-                'model' => $model,
-            ]);
-        } else {
-            if(Yii::$app->request->isAjax){
-            return $this->renderAjax('_status', [
-                'model'=>null,
-            ]);
-            }else{
-                throw new ForbiddenHttpException('You are not allowed to perform this action.');
-            }
-        }
     }
 }

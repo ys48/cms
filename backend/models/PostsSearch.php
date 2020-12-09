@@ -17,7 +17,7 @@ class PostsSearch extends Posts
     public function rules()
     {
         return [
-            [['id', 'category_id','status'], 'integer'],
+            [['id', 'category_id', 'status'], 'integer'],
             [['title', 'introduction', 'date', 'author', 'image'], 'safe'],
         ];
     }
@@ -55,13 +55,18 @@ class PostsSearch extends Posts
             // $query->where('0=1');
             return $dataProvider;
         }
-
+        if (!empty($this->date) && strpos($this->date, '-') !== false) {
+            list($start_date, $end_date) = explode(' - ', $this->date);
+            $query->andFilterWhere(['between', 'date', $start_date, $end_date]);
+        }
+        $query->orderBy([
+            'date' => SORT_ASC,
+        ]);
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'date' => $this->date,
             'category_id' => $this->category_id,
-            'status'=>$this->status,
+            'status' => $this->status,
         ]);
 
         $query->andFilterWhere(['like', 'title', $this->title])

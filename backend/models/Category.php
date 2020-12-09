@@ -3,7 +3,6 @@
 namespace backend\models;
 
 use Yii;
-use common\models\User;
 
 /**
  * This is the model class for table "category".
@@ -35,7 +34,7 @@ class Category extends \yii\db\ActiveRecord
             [['category_name'],'unique'],
             [['status'],'integer'],
             [['category_name','description'], 'string', 'max' => 255],
-            [['created_by'], 'integer'],
+            [['created_by','layout'], 'integer'],
         ];
     }
 
@@ -49,6 +48,7 @@ class Category extends \yii\db\ActiveRecord
             'category_name' => Yii::t('app', 'Category Name'),
             'description' => Yii::t('app', 'Description'),
             'created_by' => Yii::t('app', 'Created By'),
+            'layout' => Yii::t('app','Layout'),
         ];
     }
 
@@ -57,9 +57,9 @@ class Category extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getUser()
+    public function getStaff()
     {
-        return $this->hasOne(User::className(), ['id' => 'created_by']);
+        return $this->hasOne(Staff::className(), ['id' => 'created_by']);
     }
 
     /**

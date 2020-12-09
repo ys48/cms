@@ -34,7 +34,20 @@ $this->params['breadcrumbs'][] = $model->category_name;
             'description',
             [
                 'attribute' => 'created_by',
-                'value' => $model->user->username,
+                'value' => $model->staff->username,
+            ],
+            [
+                'attribute' => 'layout',
+                'value' => function ($model) {
+                    if ($model->layout == 1) {
+                        return '<i class="glyphicon glyphicon-th-list"></i>';
+                    } else if ($model->layout == 2) {
+                        return '<i class="glyphicon glyphicon-th"></i>';
+                    }else{
+                        return false;
+                    }
+                },
+                'format' => 'html',
             ],
             [
                 'attribute' => 'status',

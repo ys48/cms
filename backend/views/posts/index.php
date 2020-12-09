@@ -2,6 +2,10 @@
 
 use yii\helpers\Html;
 use kartik\grid\GridView;
+use yii\helpers\ArrayHelper;
+use backend\models\Category;
+use backend\models\Staff;
+use kartik\daterange\DateRangePicker;
 
 /* @var $this yii\web\View */
 /* @var $searchModel backend\models\PostsSearch */
@@ -18,7 +22,8 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::a('Create Posts', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+    <?php // echo $this->render('_search', ['model' => $searchModel]); 
+    ?>
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
@@ -29,11 +34,46 @@ $this->params['breadcrumbs'][] = $this->title;
             //'id',
             'title',
             'introduction',
-            'date',
+            //'date',
             [
-                'label'=>'Created By',
-                'attribute'=>'author',
-                'value'=>'user.username',
+                'attribute' => 'date',
+                'value' => function ($model) {
+                   return date('Y-m-d', strtotime($model->date));
+                },
+                'filterType' => GridView::FILTER_DATE_RANGE,
+                'filterWidgetOptions' => [ 
+                    'model' => $searchModel, 
+                    'attribute' => 'date',
+                    'convertFormat'=>true,
+                    'readonly' => true,
+                    'pluginOptions' => [ 
+                        'locale'=>['format' => 'Y-m-d']
+                    ],
+                    'pluginEvents' => [
+                        'apply.daterangepicker' => 'function(ev, picker) {
+                            if($(this).val() == "") {
+                                $(this).val(picker.startDate.format(picker.locale.format) + picker.locale.separator +
+                                picker.endDate.format(picker.locale.format)).trigger("change");
+                            }
+                        }',
+                        'show.daterangepicker' => 'function(ev, picker) {
+                            picker.container.find(".ranges").off("mouseenter.daterangepicker", "li");
+                            if($(this).val() == "") {
+                                picker.container.find(".ranges .active").removeClass("active");
+                            }
+                        }',
+                        'cancel.daterangepicker' => 'function(ev, picker) {
+                            if($(this).val() != "") {
+                                $(this).val("").trigger("change");
+                            }
+                        }'
+                    ]
+                ]            ],
+            [
+                'label' => 'Created By',
+                'attribute' => 'author',
+                'value' => 'staff.username',
+                'filter' => ArrayHelper::map(Staff::find()->asArray()->orderBy("username ASC")->all(), 'id', 'username'),
             ],
 
             //'image:image',
@@ -51,9 +91,10 @@ $this->params['breadcrumbs'][] = $this->title;
             //     'format'=>['image',['width'=>'120','height'=>'120']],  
             // ],
             [
-                'label'=>'Category',
-                'attribute'=>'category_id',
-                'value'=>'category.category_name',
+                'label' => 'Category',
+                'attribute' => 'category_id',
+                'value' => 'category.category_name',
+                'filter' => ArrayHelper::map(Category::find()->asArray()->orderBy("category_name ASC")->all(), 'id', 'category_name'),
             ],
             [
                 'attribute' => 'status',

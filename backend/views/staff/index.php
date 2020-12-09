@@ -2,6 +2,8 @@
 
 use yii\helpers\Html;
 use yii\grid\GridView;
+use yii\bootstrap\Modal;
+use yii\helpers\Url;
 
 /* @var $this yii\web\View */
 /* @var $searchModel backend\models\StaffSearch */
@@ -16,8 +18,17 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <p>
         <?= Html::a(Yii::t('app', 'Create Staff'), ['signup'], ['class' => 'btn btn-success']) ?>
+        <?= Html::button('Status', ['value' => Url::to('../staff/status'), 'class' => 'btn btn-success','id'=>'modalButton']) ?>
     </p>
-
+    <?php
+    Modal::begin([
+        'header' => '<h4>Status<h4>',
+        'id' => 'modal',
+        'size' => 'modal-lg',
+    ]);
+    echo "<div id='modalContent'></div>";
+    Modal::end();
+    ?>
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
     <?= GridView::widget([

@@ -4,12 +4,12 @@ namespace backend\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use backend\models\Category;
+use backend\models\Carousel;
 
 /**
- * CategorySearch represents the model behind the search form of `backend\models\Category`.
+ * CarouselSearch represents the model behind the search form of `backend\models\Carousel`.
  */
-class CategorySearch extends Category
+class CarouselSearch extends Carousel
 {
     /**
      * {@inheritdoc}
@@ -17,8 +17,8 @@ class CategorySearch extends Category
     public function rules()
     {
         return [
-            [['id','status'], 'integer'],
-            [['category_name', 'created_by','description'], 'safe'],
+            [['id', 'status'], 'integer'],
+            [['image'], 'safe'],
         ];
     }
 
@@ -40,7 +40,7 @@ class CategorySearch extends Category
      */
     public function search($params)
     {
-        $query = Category::find();
+        $query = Carousel::find();
 
         // add conditions that should always apply here
 
@@ -56,17 +56,13 @@ class CategorySearch extends Category
             return $dataProvider;
         }
 
-        $query->joinWith(['staff']);
-        
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'status'=>$this->status,
+            'status' => $this->status,
         ]);
 
-        $query->andFilterWhere(['like', 'category_name', $this->category_name])
-        ->andFilterWhere(['like', 'description', $this->description])
-        ->andFilterWhere(['like', 'staff.username', $this->created_by]);
+        $query->andFilterWhere(['like', 'image', $this->image]);
 
         return $dataProvider;
     }

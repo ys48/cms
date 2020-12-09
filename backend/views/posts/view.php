@@ -36,15 +36,15 @@ $this->params['breadcrumbs'][] = $this->title;
             'title',
             'introduction',
             [
-                'attribute'=>'description',
-                'format'=>'html',
+                'attribute' => 'description',
+                'format' => 'html',
                 'value' => $model->description,
             ],
             'date',
             [
-                'label'=>'Author',
-                'attribute'=>'author',
-                'value'=>$model->user->username,
+                'label' => 'Author',
+                'attribute' => 'author',
+                'value' => $model->staff->username,
             ],
             [
                 'attribute' => 'status',
@@ -57,19 +57,19 @@ $this->params['breadcrumbs'][] = $this->title;
                 },
             ],
             [
-                'attribute'=>'image',
-                'value'=>function ($model){
-                    if($model->image)
-                        return Yii::getAlias('@imgUrl').'/'.$model->image;
+                'attribute' => 'image',
+                'value' => function ($model) {
+                    if ($model->image)
+                        return Yii::getAlias('@imgUrl') . '/' . $model->image;
                     else
-                        return Yii::getAlias('@imgUrl').'/noImageAvailable.jpg';
+                        return Yii::getAlias('@imgUrl') . '/noImageAvailable.jpg';
                 },
-                'format'=>['image',['max-width'=>'200','max-height'=>'200']],  
+                'format' => ['image', ['max-width' => '200', 'max-height' => '200']],
             ],
             [
-                'label'=>'Category',
-                'attribute'=>'category_id',
-                'value'=> $model->category->category_name,
+                'label' => 'Category',
+                'attribute' => 'category_id',
+                'value' => $model->category->category_name,
             ],
         ],
     ]) ?>

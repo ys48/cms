@@ -2,6 +2,7 @@
 
 namespace frontend\controllers;
 
+use backend\models\Category;
 use frontend\models\ResendVerificationEmailForm;
 use frontend\models\VerifyEmailForm;
 use Yii;
@@ -264,8 +265,9 @@ class SiteController extends Controller
     public function actionArticles($id)
     {
         $model = Posts::find()->where(['category_id' => $id, 'status' => 10])->all();
+        $category = Category::find()->where(['id' => $id, 'status' => 10])->one();
 
-        return $this->render('article', ['model' => $model]);
+        return $this->render('article', ['model' => $model, 'category' => $category]);
     }
 
     public function actionView($id)

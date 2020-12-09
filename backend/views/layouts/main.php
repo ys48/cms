@@ -42,11 +42,14 @@ AppAsset::register($this);
         } else {
             $menuItems = [
                 ['label' => 'Home', 'url' => ['/site/index']],
-                ['label' => 'Staff', 'url' => ['/staff/index']],
                 ['label' => 'Category', 'url' => ['/category/index']],
                 ['label' => 'Posts', 'url' => ['/posts/index']],
             ];
             if (Yii::$app->user->can('admin')) {
+                $menuItems[] = [
+                    'label' => 'Staff', 'url' => ['/staff/index'],
+                    'label' => 'Carousel', 'url' => ['/carousel/index'],
+                ];
                 $menuItems[] = [
                     'label' => 'Administration',
                     'items' => [
@@ -64,14 +67,23 @@ AppAsset::register($this);
                     ]
                 ];
             }
-            $menuItems[] = '<li>'
-                . Html::beginForm(['/admin/user/logout'], 'post')
-                . Html::submitButton(
-                    'Logout (' . Yii::$app->user->identity->username . ')',
-                    ['class' => 'btn btn-link logout']
-                )
-                . Html::endForm()
-                . '</li>';
+
+            $menuItems[] = [
+                'label' => Yii::$app->user->identity->username,
+                'items' => [
+                    ['label' => 'Profile', 'url' => ['/staff/update', 'id' => Yii::$app->user->identity->id]],
+                    '<li class="divider"></li>',
+                    ['label' => 'Log Out', 'url' => ['/site/logout'], 'linkOptions' => ['data-method' => 'post']],
+                ],
+            ];
+            // $menuItems[] = '<li>'
+            //     . Html::beginForm(['/admin/user/logout'], 'post')
+            //     . Html::submitButton(
+            //         'Logout (' . Yii::$app->user->identity->username . ')',
+            //         ['class' => 'btn btn-link logout']
+            //     )
+            //     . Html::endForm()
+            //     . '</li>';
         }
         echo Nav::widget([
             'options' => ['class' => 'navbar-nav navbar-right'],

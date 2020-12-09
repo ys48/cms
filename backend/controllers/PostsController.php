@@ -10,6 +10,7 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\UploadedFile;
 use yii\filters\AccessControl;
+use yii\web\ForbiddenHttpException;
 
 /**
  * PostsController implements the CRUD actions for Posts model.
@@ -26,7 +27,7 @@ class PostsController extends Controller
                 'class' => AccessControl::className(),
                 'rules' => [
                     [
-                        'actions' => ['index', 'view', 'create' , 'update', 'delete'],
+                        'actions' => ['index', 'view', 'create', 'update', 'delete'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -49,7 +50,7 @@ class PostsController extends Controller
     {
         $searchModel = new PostsSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-
+        
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -76,64 +77,30 @@ class PostsController extends Controller
      */
     public function actionCreate()
     {
-        $model = new Posts();
+        if (\Yii::$app->user->can('articles-create-items')) {
+            $model = new Posts();
 
-        if ($model->load(Yii::$app->request->post())) {
-            $model->author = Yii::$app->user->identity->id;
-            $model->file = UploadedFile::getInstance($model, 'file');
-            if ($model->file) {
-                $model->image = $model->category_id . '_' . $model->title . '_' . $model->file->name;
-            }
-
-            // $model->image = UploadedFile::getInstance($model, 'image');
-            // if ($model->image) {
-            //     $imgName = $model->getCategory() . '_' . $model->id . '.' . $model->image->extension;
-            //     $imgPath = 'frontend/web/uploads/' . $imgName;
-            //     $model->image->saveAs($imgPath);
-            //     $model->image = $imgPath;
-            // }
-
-            // $model->image = UploadedFile::getInstances($model, 'image');
-            // if( $model->image && $model->validate()){
-            //     foreach ($model->image as $images) {
-            //         $file = new Attachment();
-            //         $file->form_id = $model->leaveID;
-            //         $file->staff_id = $model->staff_id;
-            //         $file->attachment_name = $images->baseName;
-            //         $file->attachment_path = $file->form_id.'_'.$images->baseName.'.'.$images->extension;
-            //         if($file->save()){
-            //             $images->saveAs(Yii::getAlias('@uploads/'). $file->attachment_path);
-            //             }
-            //         }
-            //     }
-
-            // $postsid = $model->id;
-            // $categoryid = $model->getCategory();
-            // $imgName = $categoryid . '_' . $postsid;
-            // $model->image=UploadedFile::getInstance($model,'image');
-            // $model->image->saveAs('uploads/'.$imgName.'.'.$model->image->extension);
-
-
-
-            // $postsid = $model->id;
-            // $categoryid = $model->getCategory();
-            // $images = UploadedFile::getInstance($model, 'image');
-            // $imgName = $categoryid . '_' . $postsid . '.' . $images->getExtension();
-            // $images->saveAs(Yii::getAlias('@imgPath') . '/' . $imgName);
-            // $model->image = $imgName;
-            // $model->save();
-
-            if ($model->save()) {
+            if ($model->load(Yii::$app->request->post())) {
+                $model->author = Yii::$app->user->identity->id;
+                $model->file = UploadedFile::getInstance($model, 'file');
                 if ($model->file) {
-                    $model->file->saveAs(Yii::getAlias('@imgPath') . '/' . $model->image);
+                    $model->image = $model->category_id . '_' . $model->title . '_' . $model->file->name;
                 }
-                return $this->redirect(['view', 'id' => $model->id]);
-            }
-        }
 
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+                if ($model->save()) {
+                    if ($model->file) {
+                        $model->file->saveAs(Yii::getAlias('@imgPath') . '/' . $model->image);
+                    }
+                    return $this->redirect(['view', 'id' => $model->id]);
+                }
+            }
+
+            return $this->render('create', [
+                'model' => $model,
+            ]);
+        } else {
+            throw new ForbiddenHttpException('You are not allowed to perform this action.');
+        }
     }
 
     /**
@@ -147,21 +114,25 @@ class PostsController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($model->load(Yii::$app->request->post())) {
-            $model->file = UploadedFile::getInstance($model, 'file');
-            if ($model->file) {
-                $model->image = $model->category_id . '_' . $model->id . '_' . $model->file->name;
-            }
-            if ($model->save()) {
+        if (\Yii::$app->user->can('articles-update-all-items', ['model' => $model])) {
+            if ($model->load(Yii::$app->request->post())) {
+                $model->file = UploadedFile::getInstance($model, 'file');
                 if ($model->file) {
-                    $model->file->saveAs(Yii::getAlias('@imgPath') . '/' .$model->image);
+                    $model->image = $model->category_id . '_' . $model->id . '_' . $model->file->name;
                 }
-                return $this->redirect(['view', 'id' => $model->id]);
+                if ($model->save()) {
+                    if ($model->file) {
+                        $model->file->saveAs(Yii::getAlias('@imgPath') . '/' . $model->image);
+                    }
+                    return $this->redirect(['view', 'id' => $model->id]);
+                }
+            } else {
+                return $this->render('update', [
+                    'model' => $model,
+                ]);
             }
         } else {
-            return $this->render('update', [
-                'model' => $model,
-            ]);
+            throw new ForbiddenHttpException('You are not allowed to perform this action.');
         }
     }
 
@@ -171,7 +142,7 @@ class PostsController extends Controller
         $image = Posts::find()->where(['id' => $id])->one()->image;
 
         if ($image) {
-            if (!unlink(Yii::getAlias('@imgPath') . '/' .$image)) {
+            if (!unlink(Yii::getAlias('@imgPath') . '/' . $image)) {
                 return false;
             }
         }
@@ -192,9 +163,16 @@ class PostsController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
 
-        return $this->redirect(['index']);
+        $model = $this->findModel($id);
+
+        if (\Yii::$app->user->can('articles-update-all-items', ['model' => $model])) {
+            $model->delete();
+
+            return $this->redirect(['index']);
+        } else {
+            throw new ForbiddenHttpException('You are not allowed to perform this action.');
+        }
     }
 
     /**

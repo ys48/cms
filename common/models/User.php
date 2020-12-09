@@ -6,7 +6,6 @@ use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
-use backend\models\Category;
 
 /**
  * User model
@@ -209,10 +208,5 @@ class User extends ActiveRecord implements IdentityInterface
     public function removePasswordResetToken()
     {
         $this->password_reset_token = null;
-    }
-
-    public function getCategory()
-    {
-        return $this->hasMany(Category::className(), ['created_by' => 'id']);
     }
 }

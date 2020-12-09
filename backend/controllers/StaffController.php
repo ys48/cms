@@ -10,6 +10,8 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use backend\models\SignupForm;
+use yii\web\ForbiddenHttpException;
+use yii\base\Model;
 
 /**
  * StaffController implements the CRUD actions for Staff model.
@@ -22,16 +24,16 @@ class StaffController extends Controller
     public function behaviors()
     {
         return [
-            // 'access' => [
-            //     'class' => AccessControl::className(),
-            //     'rules' => [
-            //         [
-            //             'actions' => ['index', 'view', 'create', 'update', 'delete'],
-            //             'allow' => true,
-            //             'roles' => ['@'],
-            //         ],
-            //     ],
-            // ],
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                        'actions' => ['index', 'view', 'signup', 'update', 'delete','status'],
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
@@ -47,13 +49,17 @@ class StaffController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new StaffSearch();
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+        if (\Yii::$app->user->can('admin')) {
+            $searchModel = new StaffSearch();
+            $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+            return $this->render('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        } else {
+            throw new ForbiddenHttpException("You are not allowed to perform this action.");
+        }
     }
 
     /**
@@ -64,9 +70,13 @@ class StaffController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+        if (\Yii::$app->user->can('admin')) {
+            return $this->render('view', [
+                'model' => $this->findModel($id),
+            ]);
+        } else {
+            throw new ForbiddenHttpException("You are not allowed to perform this action.");
+        }
     }
 
     /**
@@ -89,16 +99,20 @@ class StaffController extends Controller
 
     public function actionSignup()
     {
-        $model = new SignupForm();
-        if ($model->load(Yii::$app->request->post()) && $model->signup()) {
-            Yii::$app->session->setFlash('success', 'New account is created');
-            //return $this->goHome();
-            return $this->redirect(['index']);
-        }
+        if (\Yii::$app->user->can('admin')) {
+            $model = new SignupForm();
+            if ($model->load(Yii::$app->request->post()) && $model->signup()) {
+                Yii::$app->session->setFlash('success', 'New account is created');
+                //return $this->goHome();
+                return $this->redirect(['index']);
+            }
 
-        return $this->render('signup', [
-            'model' => $model,
-        ]);
+            return $this->render('signup', [
+                'model' => $model,
+            ]);
+        } else {
+            throw new ForbiddenHttpException("You are not allowed to perform this action.");
+        }
     }
 
     /**
@@ -111,14 +125,18 @@ class StaffController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        if (Yii::$app->user->identity->id == $model->id) {
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            if ($model->load(Yii::$app->request->post()) && $model->save()) {
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
+
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        } else {
+            throw new ForbiddenHttpException("You are not allowed to perform this action.");
         }
-
-        return $this->render('update', [
-            'model' => $model,
-        ]);
     }
 
     /**
@@ -130,9 +148,13 @@ class StaffController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        if (\Yii::$app->user->can('admin')) {
+            $this->findModel($id)->delete();
 
-        return $this->redirect(['index']);
+            return $this->redirect(['index']);
+        } else {
+            throw new ForbiddenHttpException("You are not allowed to perform this action.");
+        }
     }
 
     /**
@@ -149,5 +171,30 @@ class StaffController extends Controller
         }
 
         throw new NotFoundHttpException(Yii::t('app', 'The requested page does not exist.'));
+    }
+
+    public function actionStatus()
+    {
+        if (\Yii::$app->user->can('admin')) {
+            $model = Staff::find()->indexBy('id')->all();
+
+            if (Model::loadMultiple($model, Yii::$app->request->post()) && Model::validateMultiple($model)) {
+                foreach ($model as $models) {
+                    $models->save(false);
+                }
+                $this->redirect('index');
+            }
+            return $this->renderAjax('_status', [
+                'model' => $model,
+            ]);
+        } else {
+            if(Yii::$app->request->isAjax){
+            return $this->renderAjax('_status', [
+                'model'=>null,
+            ]);
+            }else{
+                throw new ForbiddenHttpException('You are not allowed to perform this action.');
+            }
+        }
     }
 }

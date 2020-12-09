@@ -1,4 +1,5 @@
 <?php
+
 namespace backend\controllers;
 
 use Yii;
@@ -31,7 +32,7 @@ class SiteController extends Controller
                         'allow' => true,
                     ],
                     [
-                        'actions' => ['logout', 'index'],
+                        'actions' => ['logout', 'index', 'request-password-reset','reset-password'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -105,7 +106,7 @@ class SiteController extends Controller
         return $this->goHome();
     }
 
-       /**
+    /**
      * Requests password reset.
      *
      * @return mixed
@@ -153,5 +154,4 @@ class SiteController extends Controller
             'model' => $model,
         ]);
     }
-
 }
